@@ -1,21 +1,18 @@
 package org.example.springboot.repository;
 
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.example.springboot.exception.DataProcessingException;
 import org.example.springboot.model.Book;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@RequiredArgsConstructor
 public class BookRepositoryImpl implements BookRepository {
-    private SessionFactory sessionFactory;
-
-    @Autowired
-    public BookRepositoryImpl(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
-    }
+    private final SessionFactory sessionFactory;
 
     @Override
     public Book save(Book book) {
@@ -31,7 +28,7 @@ public class BookRepositoryImpl implements BookRepository {
             if (transaction != null) {
                 transaction.rollback();
             }
-            throw new RuntimeException("Unable to save book to DB: " + book);
+            throw new DataProcessingException("Unable to save book to DB: " + book, e);
         } finally {
             if (session != null) {
                 session.close();
@@ -40,11 +37,11 @@ public class BookRepositoryImpl implements BookRepository {
     }
 
     @Override
-    public List findAll() {
+    public List<Book> findAll() {
         try (Session session = sessionFactory.openSession()) {
             return session.createQuery("select b from Book b", Book.class).getResultList();
         } catch (Exception e) {
-            throw new RuntimeException("Unable to find all books from DB: " + e);
+            throw new DataProcessingException("Unable to find all books from DB: ", e);
         }
     }
 }
