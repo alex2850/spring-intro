@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes/09-01-book-table.yaml
+  - include:
+      file: db/changelog/changes/09-02-book-add-is-deleted-column.yaml
+  - include:
+      file: db/changelog/changes/09-03-book-fix-is-deleted-to-bit.yaml
