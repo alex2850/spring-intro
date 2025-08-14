@@ -1,9 +1,0 @@
-databaseChangeLog:
-  - changeSet:
-      id: 20250809-2
-      author: Oleksandr
-      changes:
-        - modifyDataType:
-            tableName: books
-            columnName: is_deleted
-            newDataType: BIT(1)
