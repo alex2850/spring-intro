@@ -5,9 +5,11 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.example.springboot.dto.BookDto;
 import org.example.springboot.dto.CreateBookRequestDto;
+import org.example.springboot.dto.UpdateBookRequestDto;
 import org.example.springboot.service.BookService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,5 +38,12 @@ public class BookController {
     @ResponseStatus(HttpStatus.CREATED)
     public BookDto createBook(@RequestBody @Valid CreateBookRequestDto bookRequestDto) {
         return bookService.save(bookRequestDto);
+    }
+
+    @PatchMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public BookDto updateBook(@PathVariable Long id,
+                              @Valid @RequestBody UpdateBookRequestDto bookRequestDto) {
+        return bookService.update(id, bookRequestDto);
     }
 }
