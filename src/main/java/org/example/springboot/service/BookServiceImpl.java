@@ -37,6 +37,11 @@ public class BookServiceImpl implements BookService {
         );
         return bookMapper.toBookDto(book);
     }
+  
+    @Override
+    public void deleteById(Long id) {
+        bookRepository.deleteById(id);
+    }
 
     @Override
     public BookDto update(Long id, UpdateBookRequestDto bookRequestDto) {
