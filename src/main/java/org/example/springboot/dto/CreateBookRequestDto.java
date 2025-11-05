@@ -24,7 +24,6 @@ public class CreateBookRequestDto {
     @NotBlank
     @Pattern(regexp = "^(?:97[89][\\s-]?)?\\d{1,5}[\\s-]?\\d{1,7}[\\s-]?\\d{1,7}[\\s-]?[\\dXx]$")
     private String isbn;
-    @NotBlank(message = "Description cannot be blank")
     @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     private String description;
     private String coverImage;
