@@ -4,6 +4,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.example.springboot.dto.BookDto;
 import org.example.springboot.dto.CreateBookRequestDto;
+import org.example.springboot.dto.UpdateBookRequestDto;
 import org.example.springboot.exception.EntityNotFoundException;
 import org.example.springboot.mapper.BookMapper;
 import org.example.springboot.model.Book;
@@ -36,17 +37,19 @@ public class BookServiceImpl implements BookService {
         );
         return bookMapper.toBookDto(book);
     }
-
+  
     @Override
     public void deleteById(Long id) {
         bookRepository.deleteById(id);
     }
 
     @Override
-    public BookDto update(CreateBookRequestDto bookRequestDto, Long id) {
+    public BookDto update(Long id, UpdateBookRequestDto bookRequestDto) {
         Book book = bookRepository.findBookById(id).orElseThrow(
-                () -> new EntityNotFoundException("Can not find book by id" + id));
+                () -> new EntityNotFoundException("Can not find book by id " + id));
+
         bookMapper.updateBookFromDto(bookRequestDto, book);
+
         return bookMapper.toBookDto(bookRepository.save(book));
     }
 }

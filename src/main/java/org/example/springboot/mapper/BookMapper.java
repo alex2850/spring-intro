@@ -3,10 +3,12 @@ package org.example.springboot.mapper;
 import org.example.springboot.config.MapperConfig;
 import org.example.springboot.dto.BookDto;
 import org.example.springboot.dto.CreateBookRequestDto;
+import org.example.springboot.dto.UpdateBookRequestDto;
 import org.example.springboot.model.Book;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(config = MapperConfig.class)
 public interface BookMapper {
@@ -14,7 +16,6 @@ public interface BookMapper {
 
     Book toModel(CreateBookRequestDto bookRequestDto);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "deleted", ignore = true)
-    void updateBookFromDto(CreateBookRequestDto bookRequestDto, @MappingTarget Book book);
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateBookFromDto(UpdateBookRequestDto requestDto, @MappingTarget Book book);
 }

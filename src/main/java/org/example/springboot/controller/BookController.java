@@ -1,13 +1,16 @@
 package org.example.springboot.controller;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.example.springboot.dto.BookDto;
 import org.example.springboot.dto.CreateBookRequestDto;
+import org.example.springboot.dto.UpdateBookRequestDto;
 import org.example.springboot.service.BookService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -35,7 +38,7 @@ public class BookController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public BookDto createBook(@RequestBody CreateBookRequestDto bookRequestDto) {
+    public BookDto createBook(@RequestBody @Valid CreateBookRequestDto bookRequestDto) {
         return bookService.save(bookRequestDto);
     }
 
@@ -44,9 +47,11 @@ public class BookController {
     public void deleteBookById(@PathVariable Long id) {
         bookService.deleteById(id);
     }
-
-    @PutMapping("/{id}")
-    public BookDto update(@RequestBody CreateBookRequestDto bookRequestDto, @PathVariable Long id) {
-        return bookService.update(bookRequestDto, id);
+  
+    @PatchMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public BookDto updateBook(@PathVariable Long id,
+                              @Valid @RequestBody UpdateBookRequestDto bookRequestDto) {
+        return bookService.update(id, bookRequestDto);
     }
 }
