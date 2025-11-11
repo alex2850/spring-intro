@@ -34,6 +34,6 @@ public class CustomGlobalExceptionHandler {
 
     @ExceptionHandler(RegistrationException.class)
     public ResponseEntity<String> handleRegistrationException(RegistrationException ex) {
-        return new ResponseEntity<>("Registration exception occurred", HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>("Registration exception occurred", HttpStatus.BAD_REQUEST);
     }
 }
