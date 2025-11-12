@@ -6,26 +6,36 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Getter
 @Setter
+@SQLDelete(sql = "UPDATE users b SET is_deleted = true WHERE id=?")
+@SQLRestriction("is_deleted = false")
 @Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @NotNull
-    @Column(unique = true)
+
+    @Column(nullable = false, unique = true)
     private String email;
-    @NotNull
+
+    @Column(nullable = false)
     private String password;
-    @NotNull
+
+    @Column(nullable = false)
     private String firstName;
-    @NotNull
+
+    @Column(nullable = false)
     private String lastName;
+
+    @Column(nullable = false)
+    private boolean isDeleted;
+
     private String shippingAddress;
 }
