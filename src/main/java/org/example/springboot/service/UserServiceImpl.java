@@ -3,7 +3,7 @@ package org.example.springboot.service;
 import lombok.RequiredArgsConstructor;
 import org.example.springboot.dto.UserRegistrationRequestDto;
 import org.example.springboot.dto.UserResponseDto;
-import org.example.springboot.exception.EntityNotFoundException;
+import org.example.springboot.exception.RegistrationException;
 import org.example.springboot.mapper.UserMapper;
 import org.example.springboot.model.User;
 import org.example.springboot.repository.UserRepository;
@@ -18,12 +18,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto register(UserRegistrationRequestDto requestDto) {
-        User user = userRepository.findByEmail(requestDto.getEmail()).orElseThrow(
-                () -> new EntityNotFoundException("Can not find book by email "
-                        + requestDto.getEmail()));
-
-        userMapper.updateUserFromDto(requestDto, user);
-
-        return userMapper.toResponseDto(user);
+        if (userRepository.existsByEmail(requestDto.getEmail())) {
+            throw new RegistrationException(
+                    String.format("User with this email: %s already exists", requestDto.getEmail())
+            );
+        }
+        User user = userMapper.toModel(requestDto);
+        user.setPassword(requestDto.getPassword());
+        userRepository.save(user);
+        return userMapper.toDto(user);
     }
 }
