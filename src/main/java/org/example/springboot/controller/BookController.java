@@ -11,6 +11,7 @@ import org.example.springboot.service.BookService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -41,6 +42,7 @@ public class BookController {
         return bookService.getBookById(id);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create a new book", description = "Create a new book")
@@ -48,13 +50,15 @@ public class BookController {
         return bookService.save(bookRequestDto);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Delete book by id", description = "Delete book by id")
     public void deleteBookById(@PathVariable Long id) {
         bookService.deleteById(id);
     }
-  
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Update book by id", description = "Update book by id")
