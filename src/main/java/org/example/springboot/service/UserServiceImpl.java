@@ -33,7 +33,7 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.toModel(requestDto);
         user.setPassword(passwordEncoder.encode(requestDto.getPassword()));
         Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
-                .orElseThrow(() -> new RuntimeException("Role USER not found"));
+                .orElseThrow(() -> new RegistrationException("Role USER not found"));
 
         user.setRoles(Set.of(userRole));
         userRepository.save(user);
