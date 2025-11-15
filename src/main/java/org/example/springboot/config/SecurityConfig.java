@@ -40,7 +40,7 @@ public class SecurityConfig {
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated()
-                ).httpBasic(withDefaults())
+                )
                 .userDetailsService(userDetailsService)
                 .build();
     }
