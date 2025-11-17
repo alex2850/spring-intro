@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.springboot.dto.UserRegistrationRequestDto;
 import org.example.springboot.dto.UserResponseDto;
 import org.example.springboot.enums.RoleName;
+import org.example.springboot.exception.EntityNotFoundException;
 import org.example.springboot.exception.RegistrationException;
 import org.example.springboot.mapper.UserMapper;
 import org.example.springboot.model.Role;
@@ -33,7 +34,7 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.toModel(requestDto);
         user.setPassword(passwordEncoder.encode(requestDto.getPassword()));
         Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
-                .orElseThrow(() -> new RegistrationException("Role USER not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Role USER not found"));
 
         user.setRoles(Set.of(userRole));
         userRepository.save(user);
