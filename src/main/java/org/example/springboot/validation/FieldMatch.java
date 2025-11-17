@@ -15,7 +15,7 @@ public @interface FieldMatch {
 
     String[] fields() default {"password", "repeatPassword"};
 
-    Class<?>[] group() default {};
+    Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};
 }
