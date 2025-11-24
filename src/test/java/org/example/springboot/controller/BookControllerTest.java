@@ -1,24 +1,35 @@
 package org.example.springboot.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.springboot.dto.BookDto;
 import org.example.springboot.dto.CreateBookRequestDto;
-import org.example.springboot.dto.UpdateBookRequestDto;
-import org.junit.jupiter.api.Assertions;
+import org.example.springboot.repository.BookRepository;
+import org.example.springboot.util.TestUtil;
+import org.junit.jupiter.api.BeforeEach;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.example.springboot.util.TestUtil.createListOfBookDto;
+import static org.example.springboot.util.TestUtil.createListOfBookRequestDto;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -37,43 +48,57 @@ class BookControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private CreateBookRequestDto buildBook(
-            String title, String author, String isbn, int price) {
-
-        CreateBookRequestDto dto = new CreateBookRequestDto();
-        dto.setTitle(title);
-        dto.setAuthor(author);
-        dto.setIsbn(isbn);
-        dto.setPrice(BigDecimal.valueOf(price));
-        dto.setDescription("Desc");
-        dto.setCoverImage("img.png");
-        return dto;
-    }
-
     @Test
-    @DisplayName("GET /books — returns all books")
+    @DisplayName("getAllBooks() — returns all books")
     void getAllBooks_ShouldReturnStatusOk() throws Exception {
-        mockMvc.perform(get("/books"))
-                .andExpect(status().isOk());
+        List<CreateBookRequestDto> requestBooks = createListOfBookRequestDto();
+
+        List<BookDto> expected = new ArrayList<>();
+
+        for (CreateBookRequestDto dto : requestBooks) {
+            MvcResult created = mockMvc.perform(post("/books")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto)))
+                    .andExpect(status().isCreated())
+                    .andReturn();
+
+            expected.add(objectMapper.readValue(
+                    created.getResponse().getContentAsByteArray(),
+                    BookDto.class
+            ));
+        }
+
+        MvcResult response = mockMvc.perform(get("/books")
+                        .param("page", "0")
+                        .param("size", "5"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        JsonNode root = objectMapper.readTree(response.getResponse().getContentAsByteArray());
+        List<BookDto> actual = objectMapper.readValue(
+                root.get("content").toString(),
+                new TypeReference<>() {}
+        );
+
+        assertEquals(expected.size(), actual.size());
+        assertEquals(expected, actual);
     }
 
     @Test
-    @DisplayName("GET /books/{id} — returns book by id")
+    @DisplayName("getBookById() — returns book by id")
     void getBookById_ShouldReturnBook() throws Exception {
-        CreateBookRequestDto book =
-                buildBook("Test Title", "Test Author", "978-1-23456-789-9", 50);
+        CreateBookRequestDto request = TestUtil.createBookRequest();
 
         MvcResult created = mockMvc.perform(post("/books")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(book)))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        BookDto createdBook =
-                objectMapper.readValue(
-                        created.getResponse().getContentAsByteArray(),
-                        BookDto.class
-                );
+        BookDto createdBook = objectMapper.readValue(
+                created.getResponse().getContentAsByteArray(),
+                BookDto.class
+        );
 
         Long id = createdBook.getId();
 
@@ -81,23 +106,28 @@ class BookControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        BookDto response =
-                objectMapper.readValue(
-                        result.getResponse().getContentAsByteArray(),
-                        BookDto.class
-                );
+        BookDto actual = objectMapper.readValue(
+                result.getResponse().getContentAsByteArray(),
+                BookDto.class
+        );
 
-        Assertions.assertEquals("Test Title", response.getTitle());
-        Assertions.assertEquals("Test Author", response.getAuthor());
-        Assertions.assertEquals(id, response.getId());
+        BookDto expected = new BookDto();
+        expected.setId(id);
+        expected.setTitle("Test Title");
+        expected.setAuthor("Test Author");
+        expected.setIsbn(request.getIsbn());
+        expected.setPrice(BigDecimal.valueOf(9.99));
+        expected.setDescription("Some description");
+        expected.setCoverImage(null);
+
+        assertEquals(expected, actual);
     }
 
     @Test
-    @DisplayName("POST /books — creates a new book")
+    @DisplayName("createBook() — creates a new book")
     void createBook_ShouldCreate() throws Exception {
 
-        CreateBookRequestDto dto =
-                buildBook("TestBook", "Tester", "978-1-11111-222-3", 50);
+        CreateBookRequestDto dto =  TestUtil.createBookRequest();
 
         MvcResult result = mockMvc.perform(post("/books")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -106,6 +136,73 @@ class BookControllerTest {
                 .andReturn();
 
         assertThat(result.getResponse().getContentAsString())
-                .contains("TestBook");
+                .contains("Test Title");
     }
+
+    @Test
+    @DisplayName("createBook() — should return 400 when title is blank")
+    public void createBook_ShouldFail_WhenTitleBlank() throws Exception {
+        CreateBookRequestDto dto = new CreateBookRequestDto();
+        dto.setTitle("");
+        dto.setDescription("Valid");
+        dto.setPrice(BigDecimal.TEN);
+        dto.setCategoryIds(List.of(1L));
+
+        mockMvc.perform(post("/books")
+                        .content(objectMapper.writeValueAsString(dto))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("createBook() — should return 400 when price is null")
+    public void createBook_ShouldFail_WhenPriceNull() throws Exception {
+        CreateBookRequestDto dto = new CreateBookRequestDto();
+        dto.setTitle("ValidTitle");
+        dto.setDescription("Valid");
+        dto.setPrice(null);
+        dto.setCategoryIds(List.of(1L));
+
+        mockMvc.perform(post("/books")
+                        .content(objectMapper.writeValueAsString(dto))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("createBook() — should return 400 when price is negative")
+    public void createBook_ShouldFail_WhenPriceNegative() throws Exception {
+        CreateBookRequestDto dto = new CreateBookRequestDto();
+        dto.setTitle("Valid");
+        dto.setDescription("Valid");
+        dto.setPrice(BigDecimal.valueOf(-10));
+        dto.setCategoryIds(List.of(1L));
+
+        mockMvc.perform(post("/books")
+                        .content(objectMapper.writeValueAsString(dto))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Create book with invalid data")
+    void save_WithInvalidRequestDto_ReturnsBadRequest() throws Exception {
+        CreateBookRequestDto invalidRequest = new CreateBookRequestDto()
+                .setTitle("")
+                .setAuthor("")
+                .setIsbn("")
+                .setPrice(BigDecimal.valueOf(-10))
+                .setDescription("")
+                .setCoverImage("")
+                .setCategoryIds(List.of());
+        String jsonRequest = objectMapper.writeValueAsString(invalidRequest);
+        mockMvc.perform(post("/books")
+                        .content(jsonRequest)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+
 }
+
+

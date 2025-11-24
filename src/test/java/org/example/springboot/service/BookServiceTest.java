@@ -6,7 +6,6 @@ import org.example.springboot.dto.UpdateBookRequestDto;
 import org.example.springboot.mapper.BookMapperImpl;
 import org.example.springboot.model.Book;
 import org.example.springboot.repository.BookRepository;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +18,9 @@ import org.springframework.data.domain.*;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 public class BookServiceTest {
@@ -54,8 +56,7 @@ public class BookServiceTest {
         Mockito.when(bookMapper.toBookDto(book)).thenReturn(expected);
 
         BookDto actual = bookService.getBookById(bookId);
-        Assertions.assertEquals("Kobzar", actual.getTitle());
-        Assertions.assertEquals(bookId, actual.getId());
+        assertEquals(expected, actual);
 
     }
 
@@ -90,8 +91,7 @@ public class BookServiceTest {
 
         BookDto actual = bookService.save(request);
 
-        Assertions.assertEquals(1L, actual.getId());
-        Assertions.assertEquals("Kobzar", actual.getTitle());
+        assertEquals(dto, actual);
     }
 
     @Test
@@ -99,33 +99,32 @@ public class BookServiceTest {
     public void findAll_ShouldReturnPagedBooks() {
         Pageable pageable = PageRequest.of(0, 2);
 
-        Book book1 = new Book();
-        book1.setId(1L);
-        book1.setTitle("A");
+        Book bookKobzar = new Book();
+        bookKobzar.setId(1L);
+        bookKobzar.setTitle("A");
 
-        Book book2 = new Book();
-        book2.setId(2L);
-        book2.setTitle("B");
+        Book bookTale = new Book();
+        bookTale.setId(2L);
+        bookTale.setTitle("B");
 
-        Page<Book> page = new PageImpl<>(List.of(book1, book2), pageable, 2);
+        Page<Book> page = new PageImpl<>(List.of(bookKobzar, bookTale), pageable, 2);
 
-        BookDto dto1 = new BookDto();
-        dto1.setId(1L);
-        dto1.setTitle("A");
+        BookDto dtoKobzar = new BookDto();
+        dtoKobzar.setId(1L);
+        dtoKobzar.setTitle("A");
 
-        BookDto dto2 = new BookDto();
-        dto2.setId(2L);
-        dto2.setTitle("B");
+        BookDto dtoTale = new BookDto();
+        dtoTale.setId(2L);
+        dtoTale.setTitle("B");
 
         Mockito.when(bookRepository.findAll(pageable)).thenReturn(page);
-        Mockito.when(bookMapper.toBookDto(book1)).thenReturn(dto1);
-        Mockito.when(bookMapper.toBookDto(book2)).thenReturn(dto2);
+        Mockito.when(bookMapper.toBookDto(bookKobzar)).thenReturn(dtoKobzar);
+        Mockito.when(bookMapper.toBookDto(bookTale)).thenReturn(dtoTale);
 
-        Page<BookDto> result = bookService.findAll(pageable);
+        List<BookDto> result = bookService.findAll(pageable).toList();
 
-        Assertions.assertEquals(2, result.getContent().size());
-        Assertions.assertEquals("A", result.getContent().get(0).getTitle());
-        Assertions.assertEquals("B", result.getContent().get(1).getTitle());
+        assertEquals(2, result.size());
+        assertEquals(List.of(dtoKobzar, dtoTale), result);
     }
 
     @Test
@@ -151,21 +150,31 @@ public class BookServiceTest {
         dto.setTitle("Updated");
 
         Mockito.when(bookRepository.findBookById(id)).thenReturn(Optional.of(existing));
-        Mockito.doAnswer(invocation -> {
-            UpdateBookRequestDto req = invocation.getArgument(0);
-            Book b = invocation.getArgument(1);
-            b.setTitle(req.getTitle());
-            b.setDescription(req.getDescription());
-            b.setPrice(req.getPrice());
-            return null;
-        }).when(bookMapper).updateBookFromDto(request, existing);
 
         Mockito.when(bookRepository.save(existing)).thenReturn(saved);
+
         Mockito.when(bookMapper.toBookDto(saved)).thenReturn(dto);
 
         BookDto actual = bookService.update(id, request);
 
-        Assertions.assertEquals("Updated", actual.getTitle());
-        Assertions.assertEquals(id, actual.getId());
+        assertEquals(dto, actual);
+    }
+
+    @Test
+    @DisplayName("update() — should throw when book does not exist")
+    public void update_ShouldThrow_WhenBookNotFound() {
+        Long id = 999L;
+
+        UpdateBookRequestDto request = new UpdateBookRequestDto();
+        request.setTitle("Updated");
+
+        Mockito.when(bookRepository.findBookById(id)).thenReturn(Optional.empty());
+
+        RuntimeException ex = org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class,
+                () -> bookService.update(id, request)
+        );
+
+        assertThrows(RuntimeException.class, () -> bookService.update(id, request));
     }
 }

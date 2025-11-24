@@ -6,11 +6,18 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
+import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Accessors(chain = true)
 public class CreateBookRequestDto {
     @NotBlank(message = "Title cannot be blank")
     @Size(min = 2, max = 100, message = "Title must be between 2 and 100 characters")
@@ -27,4 +34,5 @@ public class CreateBookRequestDto {
     @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     private String description;
     private String coverImage;
+    private List<Long> categoryIds;
 }

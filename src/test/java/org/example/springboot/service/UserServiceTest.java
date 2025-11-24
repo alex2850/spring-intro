@@ -11,7 +11,6 @@ import org.example.springboot.model.User;
 import org.example.springboot.repository.RoleRepository;
 import org.example.springboot.repository.UserRepository;
 import org.example.springboot.service.UserServiceImpl;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +22,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
@@ -79,12 +81,12 @@ public class UserServiceTest {
         UserResponseDto actual = userService.register(request);
 
         // then
-        Assertions.assertEquals("test@mail.com", actual.getEmail());
-        Assertions.assertEquals("Bob", actual.getFirstName());
+        assertEquals("test@mail.com", actual.getEmail());
+        assertEquals("Bob", actual.getFirstName());
 
         Mockito.verify(userRepository).save(user);
-        Assertions.assertEquals(Set.of(role), user.getRoles());
-        Assertions.assertEquals("encoded", user.getPassword());
+        assertEquals(Set.of(role), user.getRoles());
+        assertEquals("encoded", user.getPassword());
     }
 
     // -------------------------------------------------------------------------
@@ -97,7 +99,7 @@ public class UserServiceTest {
         Mockito.when(userRepository.existsByEmail("test@mail.com"))
                 .thenReturn(true);
 
-        Assertions.assertThrows(RegistrationException.class,
+        assertThrows(RegistrationException.class,
                 () -> userService.register(request));
     }
 
@@ -122,7 +124,7 @@ public class UserServiceTest {
         Mockito.when(roleRepository.findByName(RoleName.ROLE_USER))
                 .thenReturn(Optional.empty());
 
-        Assertions.assertThrows(EntityNotFoundException.class,
+        assertThrows(EntityNotFoundException.class,
                 () -> userService.register(request));
     }
 }
