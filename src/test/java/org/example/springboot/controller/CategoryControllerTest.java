@@ -29,10 +29,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
-@TestPropertySource(properties = {
-        "jwt.secret=awfEWF432r32r23r23RFSDF23423r23r32r23r23f23423RFAWER2342342",
-        "jwt.expiration=450000"
-})
 class CategoryControllerTest {
 
     @Autowired
