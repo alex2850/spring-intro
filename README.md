@@ -37,6 +37,8 @@ It supports:
 | **JUnit 5 + MockMvc** | Integration tests |
 
 ---
+## 📊 Entity Relationships
+![UML Diagram](uml.png)
 
 ## 🧩 Architecture Overview
 
